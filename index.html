@@ -17,7 +17,7 @@
   <div class="container">
     <h1>Roulette Spin</h1>
 
-    <!-- Form Input -->
+    <!-- tempat Input -->
     <div id="formSection">
       <label>Nama (satu per baris):</label>
       <textarea id="namesInput" placeholder="contoh:Dava enter Juan"></textarea>
@@ -29,12 +29,12 @@
 
     <!-- Bagian Roulette -->
     <div id="wheelSection">
-      <!-- Audio -->
+      <!-- tempat Audio -->
       <audio id="spinSound" src="spin.mp3" preload="auto"></audio>
       <audio id="finishOneSound" src="hoi4_path_done.mp3" preload="auto"></audio>
       <audio id="finishAllSound" src="hoi4_final.mp3" preload="auto"></audio>
 
-      <!-- Wheel -->
+      <!-- Wheelnya -->
       <canvas id="wheelCanvas" width="400" height="400"></canvas><br />
       <button id="spinBtn" onclick="spinWheel()">Spin</button>
       <div id="result"></div>
@@ -72,7 +72,6 @@
       document.getElementById("result").innerText = "";
       document.getElementById("result").style.opacity = 0;
 
-      // Munculkan bagian roulette tanpa memindahkan tombol simpan
       document.getElementById("wheelSection").style.display = "block";
     }
 
@@ -153,8 +152,8 @@ function drawWheel(entries, angleOffset = 0) {
       }, 50);
     }
 
-    // Initial wheel (kosong)
     drawWheel([]);
   </script>
 </body>
 </html>
+
