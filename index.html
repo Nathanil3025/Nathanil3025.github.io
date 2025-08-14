@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roulette Spin Combined</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background-color: #fffbe6; }
+    .container { max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 10px; }
+    textarea { width: 100%; height: 80px; margin-bottom: 10px; }
+    button { padding: 10px 20px; font-size: 18px; cursor: pointer; margin: 5px; }
+    canvas { margin-top: 20px; transition: opacity 2s ease; }
+    #result { font-size: 22px; margin-top: 20px; font-weight: bold; opacity: 0; transition: opacity 2s ease; white-space: pre-line; }
+    #wheelSection { display: none; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Roulette Spin</h1>
+
+    <!-- Form Input -->
+    <div id="formSection">
+      <label>Nama (satu per baris):</label>
+      <textarea id="namesInput" placeholder="contoh:Dava enter Juan"></textarea>
+      <label>Role (satu per baris):</label>
+      <textarea id="rolesInput" placeholder="contoh:Role enter Role 2"></textarea>
+      <br>
+      <button onclick="saveData()">Simpan</button>
+    </div>
+
+    <!-- Bagian Roulette -->
+    <div id="wheelSection">
+      <!-- Audio -->
+      <audio id="spinSound" src="spin.mp3" preload="auto"></audio>
+      <audio id="finishOneSound" src="hoi4_path_done.mp3" preload="auto"></audio>
+      <audio id="finishAllSound" src="hoi4_final.mp3" preload="auto"></audio>
+
+      <!-- Wheel -->
+      <canvas id="wheelCanvas" width="400" height="400"></canvas><br />
+      <button id="spinBtn" onclick="spinWheel()">Spin</button>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <script>
+    let names = [];
+    let roles = [];
+    let assignments = [];
+    let remainingNames = [];
+    let remainingRoles = [];
+
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const center = canvas.width / 2;
+    const radius = center - 10;
+
+    const spinSound = document.getElementById("spinSound");
+    const finishOneSound = document.getElementById("finishOneSound");
+    const finishAllSound = document.getElementById("finishAllSound");
+
+    function saveData() {
+      names = document.getElementById("namesInput").value.trim().split("\n").filter(n => n);
+      roles = document.getElementById("rolesInput").value.trim().split("\n").filter(r => r);
+      if (names.length === 0 || roles.length === 0) {
+        alert("Mohon isi Nama dan Role terlebih dahulu!");
+        return;
+      }
+      remainingNames = [...names];
+      remainingRoles = [...roles];
+      assignments = [];
+      canvas.style.opacity = 1;
+      drawWheel(remainingNames);
+      document.getElementById("result").innerText = "";
+      document.getElementById("result").style.opacity = 0;
+
+      // Munculkan bagian roulette tanpa memindahkan tombol simpan
+      document.getElementById("wheelSection").style.display = "block";
+    }
+
+function drawWheel(entries, angleOffset = 0) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (entries.length === 0) return;
+  const slice = (2 * Math.PI) / entries.length;
+  const colors = ["#cc0000", "#0000cc", "#009900", "#cccc00"]; // Merah, Biru, Hijau, Kuning (lebih gelap)
+  entries.forEach((entry, i) => {
+    const angle = i * slice + angleOffset;
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.arc(center, center, radius, angle, angle + slice);
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    ctx.save();
+    ctx.translate(center, center);
+    ctx.rotate(angle + slice / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "black";
+    ctx.font = "14px sans-serif";
+    ctx.fillText(entry, radius - 10, 5);
+    ctx.restore();
+  });
+}
+
+    let spinning = false;
+    function spinWheel() {
+      if (spinning || remainingNames.length === 0 || remainingRoles.length === 0) return;
+
+      spinning = true;
+      spinSound.currentTime = 0;
+      spinSound.play();
+
+      const selectedNameIndex = Math.floor(Math.random() * remainingNames.length);
+      const selectedRoleIndex = Math.floor(Math.random() * remainingRoles.length);
+      const selectedName = remainingNames[selectedNameIndex];
+      const selectedRole = remainingRoles[selectedRoleIndex];
+
+      const totalSteps = 50;
+      let step = 0;
+      let angleOffset = 0;
+      const entries = [...remainingNames];
+
+      const spinInterval = setInterval(() => {
+        angleOffset += 0.3;
+        drawWheel(entries, angleOffset);
+        step++;
+        if (step >= totalSteps) {
+          clearInterval(spinInterval);
+          spinning = false;
+
+          spinSound.pause();
+          spinSound.currentTime = 0;
+
+          finishOneSound.currentTime = 0;
+          finishOneSound.play();
+
+          assignments.push(`${selectedName} => ${selectedRole}`);
+          document.getElementById("result").innerText = `🎯 ${selectedName} => ${selectedRole}`;
+          document.getElementById("result").style.opacity = 1;
+
+          remainingNames.splice(selectedNameIndex, 1);
+          remainingRoles.splice(selectedRoleIndex, 1);
+
+          if (remainingRoles.length === 0 || remainingNames.length === 0) {
+            setTimeout(() => {
+              finishAllSound.currentTime = 0;
+              finishAllSound.play();
+              canvas.style.opacity = 0;
+              document.getElementById("result").innerText =
+                `✅ Semua role telah dibagikan:\n\n${assignments.join('\n')}`;
+            }, 2000);
+          } else {
+            drawWheel(remainingNames);
+          }
+        }
+      }, 50);
+    }
+
+    // Initial wheel (kosong)
+    drawWheel([]);
+  </script>
+</body>
+</html>
